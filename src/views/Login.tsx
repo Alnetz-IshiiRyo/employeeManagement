@@ -32,13 +32,14 @@ const Login = () => {
             <Form.Group className="mb-3">
               <Form.Label>パスワード</Form.Label>
               <Form.Control
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="パスワード"
               />
-              <Form.Check 
-                label="パスワードを表示" 
+              <Form.Check
+                label="パスワードを表示"
+                id="show-password-checkbox"
                 onChange={(e) => setShowPassword(e.target.checked)}
                 className="mt-2"
               />
@@ -47,7 +48,8 @@ const Login = () => {
               ログイン
             </Button>
             <div className="text-center mt-3">
-              アカウントをお持ちでないですか？ <Link to="/register">こちらで登録</Link>
+              アカウントをお持ちでないですか？{' '}
+              <Link to="/register">こちらで登録</Link>
             </div>
           </Form>
         </Card.Body>
