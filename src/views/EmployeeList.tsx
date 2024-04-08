@@ -55,7 +55,7 @@ const headCells: HeadCell[] = [
   { id: 'phone', numeric: false, disablePadding: false, label: '電話番号' },
 ];
 
-function EmployeeList() {
+export default function EmployeeList() {
   const [employees, setEmployees] = useState<Employee[]>([
     /* 初期データ */
   ]);
@@ -248,5 +248,3 @@ function EmployeeList() {
     </>
   );
 }
-
-export default EmployeeList;

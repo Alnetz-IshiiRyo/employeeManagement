@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Login from './views/Login';
-// import Register from './views/Register';
+import Register from './views/Register';
 import EmployeeList from './views/EmployeeList';
 
-const App = () => {
+export default function App() {
   return (
     <Router>
       <div>
@@ -12,9 +12,9 @@ const App = () => {
           <Route path="/login">
             <Login />
           </Route>
-          {/* <Route path="/register">
+          <Route path="/register">
             <Register />
-          </Route> */}
+          </Route>
           <Route path="/employees">
             <EmployeeList />
           </Route>
@@ -25,6 +25,4 @@ const App = () => {
       </div>
     </Router>
   );
-};
-
-export default App;
+}

@@ -7,7 +7,7 @@ import '../css/Login.css'; // CSSファイルのインポート
 // コンポーネントのPropsの型定義（ここではPropsは使用していないため空）
 interface LoginProps {}
 
-const Login: React.FC<LoginProps> = () => {
+export default function Login(props: LoginProps) {
   // 状態の型定義
   const [userId, setUserId] = useState<string>(''); // ユーザーID
   const [password, setPassword] = useState<string>(''); // パスワード
@@ -26,14 +26,14 @@ const Login: React.FC<LoginProps> = () => {
     setShowError(false);
 
     try {
-      const response = await axios.post('/api/admin/login', {
-        userId,
-        password,
-      });
+      // const response = await axios.post('/api/admin/login', {
+      //   userId,
+      //   password,
+      // });
 
-      // レスポンスからトークンを取得し、セッションストレージに保存
-      const { token } = response.data;
-      sessionStorage.setItem('authToken', token);
+      // // レスポンスからトークンを取得し、セッションストレージに保存
+      // const { token } = response.data;
+      // sessionStorage.setItem('authToken', token);
 
       history.push('/employees'); // 従業員一覧ページへリダイレクト
     } catch (error) {
@@ -100,6 +100,4 @@ const Login: React.FC<LoginProps> = () => {
       </Card>
     </Container>
   );
-};
-
-export default Login;
+}
