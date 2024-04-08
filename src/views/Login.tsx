@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Container, Form, Button, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import '../css/Login.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  let history = useHistory();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log(username, password);
     // 認証処理をここに実装
+    history.push('/employees');
   };
 
   return (
