@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { Link, useHistory } from 'react-router-dom';
 import axios from 'axios';
+import '../css/Login.css'; // CSSファイルのインポート
 
 // コンポーネントのPropsの型定義（ここではPropsは使用していないため空）
 interface LoginProps {}
