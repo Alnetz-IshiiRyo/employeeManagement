@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Login from './views/Login';
-import Register from './views/Register';
+// import Register from './views/Register';
 import EmployeeList from './views/EmployeeList';
 
 const App = () => {

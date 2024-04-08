@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   TableContainer,
   Table,
@@ -6,18 +6,24 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  TableSortLabel,
   Paper,
-  Button,
   AppBar,
   Toolbar,
   Typography,
+  Button,
+  Snackbar,
   IconButton,
   Menu,
   MenuItem,
 } from '@mui/material';
+import axios from 'axios';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Alert from '@mui/material/Alert';
+import employeesTmp from './test';
 
 interface Employee {
+  id: number;
   firstName: string;
   lastName: string;
   birthDate: string;
@@ -26,32 +32,79 @@ interface Employee {
   postalCode: string;
   phone: string;
 }
-const EmployeeList: React.FC = () => {
-  const employees: Employee[] = [
-    // サンプルデータ
-    {
-      firstName: '洋平',
-      lastName: '赤田',
-      birthDate: '1980/01/01',
-      gender: '男性',
-      address: '東京都渋谷区神南1-2-3',
-      postalCode: '150-0041',
-      phone: '03-1234-5678',
-    },
-    // 他の従業員データ...
-  ];
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
+interface HeadCell {
+  disablePadding: boolean;
+  id: keyof Employee;
+  label: string;
+  numeric: boolean;
+}
+
+const headCells: HeadCell[] = [
+  { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
+  { id: 'firstName', numeric: false, disablePadding: false, label: '氏名' },
+  { id: 'birthDate', numeric: false, disablePadding: false, label: '生年月日' },
+  { id: 'gender', numeric: false, disablePadding: false, label: '性別' },
+  { id: 'address', numeric: false, disablePadding: false, label: '住所' },
+  {
+    id: 'postalCode',
+    numeric: false,
+    disablePadding: false,
+    label: '郵便番号',
+  },
+  { id: 'phone', numeric: false, disablePadding: false, label: '電話番号' },
+];
+
+function EmployeeList() {
+  const [employees, setEmployees] = useState<Employee[]>([
+    /* 初期データ */
+  ]);
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('asc');
+  const [orderBy, setOrderBy] = useState<keyof Employee>('id');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        // const response = await axios.get('http://example.com/api/employees');
+        setEmployees(employeesTmp);
+        setLoading(false);
+      } catch (error) {
+        setError('データの取得中にエラーが発生しました。');
+        setOpenSnackbar(true);
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const handleRequestSort = (property: keyof Employee) => {
+    const isAsc = orderBy === property && orderDirection === 'asc';
+    setOrderDirection(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
   };
 
-  const handleLogout = () => {
-    console.log('ログアウト処理');
+  const sortEmployees = (array: Employee[]) => {
+    return array.sort((a, b) => {
+      if (a[orderBy] < b[orderBy]) {
+        return orderDirection === 'asc' ? -1 : 1;
+      }
+      if (a[orderBy] > b[orderBy]) {
+        return orderDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
   };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+  };
+
+  const sortedEmployees = sortEmployees([...employees]);
 
   const handleRegister = () => {
     console.log('従業員登録');
@@ -61,22 +114,54 @@ const EmployeeList: React.FC = () => {
     console.log('インポート');
   };
 
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click(); // ファイル入力をプログラム的にクリック
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('ファイルが選択されました:', file.name);
+      // ここでファイルのアップロード処理や読み込み処理を行います
+    }
+  };
+
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: '#f8f8f8' }}>
+      <AppBar position="static">
         <Toolbar>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ flexGrow: 1, color: '#333' }}
-          >
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
             従業員一覧
           </Typography>
-          <Button color="primary" onClick={handleLogout}>
+          <Button color="inherit" onClick={() => console.log('ログアウト')}>
             ログアウト
           </Button>
         </Toolbar>
       </AppBar>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={null}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: '100%' }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
       <Toolbar sx={{ justifyContent: 'flex-end', background: '#f0f0f0' }}>
         <Button
           variant="contained"
@@ -86,29 +171,43 @@ const EmployeeList: React.FC = () => {
         >
           従業員登録
         </Button>
-        <Button variant="contained" color="secondary" onClick={handleImport}>
+        <Button variant="contained" color="info" onClick={handleFileSelect}>
           インポート
         </Button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+          accept=".xls,.xlsx"
+        />
       </Toolbar>
-      <TableContainer
-        component={Paper}
-        sx={{ mt: 4, overflow: 'hidden', borderRadius: 2, boxShadow: 3 }}
-      >
+      <TableContainer component={Paper}>
         <Table aria-label="simple table">
-          <TableHead sx={{ backgroundColor: '#E3F2FD' }}>
+          <TableHead>
             <TableRow>
-              <TableCell>氏名</TableCell>
-              <TableCell>生年月日</TableCell>
-              <TableCell>性別</TableCell>
-              <TableCell>住所</TableCell>
-              <TableCell>郵便番号</TableCell>
-              <TableCell>電話番号</TableCell>
+              {headCells.map((headCell) => (
+                <TableCell
+                  key={headCell.id}
+                  align={headCell.numeric ? 'right' : 'left'}
+                  padding={headCell.disablePadding ? 'none' : 'normal'}
+                >
+                  <TableSortLabel
+                    active={orderBy === headCell.id}
+                    direction={orderBy === headCell.id ? orderDirection : 'asc'}
+                    onClick={() => handleRequestSort(headCell.id)}
+                  >
+                    {headCell.label}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
               <TableCell></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {employees.map((employee, index) => (
-              <TableRow key={index}>
+            {sortedEmployees.map((employee) => (
+              <TableRow key={employee.id}>
+                <TableCell align="right">{employee.id}</TableCell>
                 <TableCell>{`${employee.lastName} ${employee.firstName}`}</TableCell>
                 <TableCell>{employee.birthDate}</TableCell>
                 <TableCell>{employee.gender}</TableCell>
@@ -130,6 +229,12 @@ const EmployeeList: React.FC = () => {
                     keepMounted
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
+                    sx={{
+                      '& .MuiPaper-root': {
+                        // Menu の内部の Paper コンポーネントに適用されるスタイル
+                        boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)', // 影の強さを調整
+                      },
+                    }}
                   >
                     <MenuItem onClick={handleClose}>編集</MenuItem>
                     <MenuItem onClick={handleClose}>削除</MenuItem>
@@ -142,6 +247,6 @@ const EmployeeList: React.FC = () => {
       </TableContainer>
     </>
   );
-};
+}
 
 export default EmployeeList;
