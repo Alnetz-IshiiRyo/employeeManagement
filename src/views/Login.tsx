@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/Login.css'; // CSSファイルのインポート
 
@@ -17,7 +17,7 @@ export default function Login(props: LoginProps) {
   const [errorMessage, setErrorMessage] = useState<string>(''); // エラーメッセージ
   const [showError, setShowError] = useState<boolean>(false); // エラー表示
 
-  const history = useHistory();
+  const navigation = useNavigate();
 
   // ログイン送信処理
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -37,7 +37,7 @@ export default function Login(props: LoginProps) {
       const { token } = response.data;
       sessionStorage.setItem('authToken', token);
 
-      history.push('/employees'); // 従業員一覧ページへリダイレクト
+      navigation('/employees'); // 従業員一覧ページへリダイレクト
     } catch (error) {
       // エラー処理
       if (axios.isAxiosError(error) && error.response) {
