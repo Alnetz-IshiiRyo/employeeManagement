@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   TableContainer,
   Table,
@@ -66,11 +67,47 @@ const headCells: HeadCell[] = [
   { id: 'tel', numeric: false, disablePadding: false, label: '電話番号' },
 ];
 
-// 従業員データ取得APIのエンドポイント
+// 従業員データ取得API
 const GET_EMPLOYEES_API = '/api/admin/employees'; // TODO:後で編集
+// 従業員インポートAPI
+const POST_IMPORT_API = '/api/employees/import'; // TODO:後で編集
+// 従業員削除API
+const DELETE_EMPLOYEES_API = '/api/employees/'; // TODO:後で編集
+
+// 従業員インポート処理
+const handleImport = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    await axios.post(POST_IMPORT_API, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    alert('インポートが完了しました。');
+    // 成功したらデータを再取得するなどの処理
+  } catch (error) {
+    console.error('インポート処理に失敗しました。', error);
+  }
+};
+
+// 従業員削除処理
+const handleDelete = async (userId: string) => {
+  if (window.confirm(`${userId}を削除しますか？`)) {
+    try {
+      await axios.delete(`${DELETE_EMPLOYEES_API}${userId}`);
+      alert('削除が完了しました。');
+      // 成功したらデータを再取得するなどの処理
+    } catch (error) {
+      console.error('削除処理に失敗しました。', error);
+    }
+  }
+};
 
 // 従業員一覧コンポーネント
 export default function EmployeeList() {
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('asc');
   const [orderBy, setOrderBy] = useState<keyof Employee>('userId');
@@ -132,6 +169,14 @@ export default function EmployeeList() {
     setOpenSnackbar(false);
   };
 
+  // ファイル選択イベント
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImport(file); // インポート処理を呼び出し
+    }
+  };
+
   const sortedEmployees = sortEmployees([...employees]);
 
   return (
@@ -164,7 +209,7 @@ export default function EmployeeList() {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => console.log('従業員登録')}
+          onClick={() => navigate('/register')} // 登録画面への遷移
           sx={{ marginX: 1 }}
         >
           従業員登録
@@ -179,12 +224,7 @@ export default function EmployeeList() {
         <input
           type="file"
           ref={fileInputRef}
-          onChange={(event) =>
-            console.log(
-              'ファイルが選択されました:',
-              event.target.files?.[0].name,
-            )
-          }
+          onChange={handleFileChange}
           style={{ display: 'none' }}
           accept=".xls,.xlsx"
         />
@@ -241,8 +281,14 @@ export default function EmployeeList() {
                       },
                     }}
                   >
-                    <MenuItem onClick={() => setAnchorEl(null)}>編集</MenuItem>
-                    <MenuItem onClick={() => setAnchorEl(null)}>削除</MenuItem>
+                    <MenuItem
+                      onClick={() => navigate(`/edit/${employee.userId}`)}
+                    >
+                      編集
+                    </MenuItem>
+                    <MenuItem onClick={() => handleDelete(employee.userId)}>
+                      削除
+                    </MenuItem>
                   </Menu>
                 </TableCell>
               </TableRow>

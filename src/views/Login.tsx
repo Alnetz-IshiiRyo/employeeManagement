@@ -17,7 +17,7 @@ export default function Login(props: LoginProps) {
   const [errorMessage, setErrorMessage] = useState<string>(''); // エラーメッセージ
   const [showError, setShowError] = useState<boolean>(false); // エラー表示
 
-  const navigation = useNavigate();
+  const navigate = useNavigate();
 
   // ログイン送信処理
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -37,7 +37,7 @@ export default function Login(props: LoginProps) {
       const { token } = response.data;
       sessionStorage.setItem('authToken', token);
 
-      navigation('/employees'); // 従業員一覧ページへリダイレクト
+      navigate('/employees'); // 従業員一覧ページへリダイレクト
     } catch (error) {
       // エラー処理
       if (axios.isAxiosError(error) && error.response) {
