@@ -7,6 +7,8 @@ import '../css/Login.css'; // CSSファイルのインポート
 // コンポーネントのPropsの型定義（ここではPropsは使用していないため空）
 interface LoginProps {}
 
+const LOGIN_API = '/api/admin/login'; // TODO:後で修正
+
 export default function Login(props: LoginProps) {
   // 状態の型定義
   const [userId, setUserId] = useState<string>(''); // ユーザーID
@@ -26,14 +28,14 @@ export default function Login(props: LoginProps) {
     setShowError(false);
 
     try {
-      // const response = await axios.post('/api/admin/login', {
-      //   userId,
-      //   password,
-      // });
+      const response = await axios.post(LOGIN_API, {
+        userId,
+        password,
+      });
 
-      // // レスポンスからトークンを取得し、セッションストレージに保存
-      // const { token } = response.data;
-      // sessionStorage.setItem('authToken', token);
+      // レスポンスからトークンを取得し、セッションストレージに保存
+      const { token } = response.data;
+      sessionStorage.setItem('authToken', token);
 
       history.push('/employees'); // 従業員一覧ページへリダイレクト
     } catch (error) {

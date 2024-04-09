@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   TableContainer,
   Table,
@@ -16,23 +16,39 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Alert,
 } from '@mui/material';
 import axios from 'axios';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Alert from '@mui/material/Alert';
-import employeesTmp from './test';
 
-interface Employee {
-  id: number;
-  firstName: string;
+import employeesTmp from './test'; // TODO:テストデータ後で消す
+
+// API従業員情報の型定義
+interface APIEmployee {
+  userId: string;
   lastName: string;
-  birthDate: string;
-  gender: string;
+  firstName: string;
+  birthday: string;
+  email: string;
+  zipcode: string;
+  prefcode: string;
+  city: string;
   address: string;
-  postalCode: string;
-  phone: string;
+  tel: string;
 }
 
+// 従業員情報の型定義
+interface Employee {
+  userId: string;
+  fullName: string;
+  birthday: string;
+  email: string;
+  zipcode: string;
+  fullAddress: string;
+  tel: string;
+}
+
+// テーブルヘッダーの情報を定義する型
 interface HeadCell {
   disablePadding: boolean;
   id: keyof Employee;
@@ -40,47 +56,59 @@ interface HeadCell {
   numeric: boolean;
 }
 
+// テーブルヘッダーの設定を修正
 const headCells: HeadCell[] = [
-  { id: 'id', numeric: true, disablePadding: false, label: 'ID' },
-  { id: 'firstName', numeric: false, disablePadding: false, label: '氏名' },
-  { id: 'birthDate', numeric: false, disablePadding: false, label: '生年月日' },
-  { id: 'gender', numeric: false, disablePadding: false, label: '性別' },
-  { id: 'address', numeric: false, disablePadding: false, label: '住所' },
-  {
-    id: 'postalCode',
-    numeric: false,
-    disablePadding: false,
-    label: '郵便番号',
-  },
-  { id: 'phone', numeric: false, disablePadding: false, label: '電話番号' },
+  { id: 'userId', numeric: false, disablePadding: false, label: 'ユーザーID' },
+  { id: 'fullName', numeric: false, disablePadding: false, label: '氏名' },
+  { id: 'birthday', numeric: false, disablePadding: false, label: '生年月日' },
+  { id: 'email', numeric: false, disablePadding: false, label: 'メール' },
+  { id: 'fullAddress', numeric: false, disablePadding: false, label: '住所' },
+  { id: 'tel', numeric: false, disablePadding: false, label: '電話番号' },
 ];
 
+// 従業員データ取得APIのエンドポイント
+const GET_EMPLOYEES_API = '/api/admin/employees'; // TODO:後で編集
+
+// 従業員一覧コンポーネント
 export default function EmployeeList() {
-  const [employees, setEmployees] = useState<Employee[]>([
-    /* 初期データ */
-  ]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('asc');
-  const [orderBy, setOrderBy] = useState<keyof Employee>('id');
+  const [orderBy, setOrderBy] = useState<keyof Employee>('userId');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const formatdata = formatEmployeeData(employeesTmp);
+    setEmployees(formatdata); // 従業員データをセット
+
     const fetchEmployees = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        // const response = await axios.get('http://example.com/api/employees');
-        setEmployees(employeesTmp);
-        setLoading(false);
+        const response = await axios.get(GET_EMPLOYEES_API);
+        const formatdata = formatEmployeeData(response.data);
+        setEmployees(formatdata); // 従業員データをセット
       } catch (error) {
         setError('データの取得中にエラーが発生しました。');
         setOpenSnackbar(true);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchEmployees();
   }, []);
+
+  // 従業員データを表示用に整形する関数
+  const formatEmployeeData = (employees: APIEmployee[]) => {
+    return employees.map((employee) => ({
+      ...employee,
+      fullName: `${employee.lastName} ${employee.firstName}`, // 氏名の結合
+      fullAddress: `${employee.prefcode} ${employee.city} ${employee.address}`, // 住所の結合
+    }));
+  };
 
   const handleRequestSort = (property: keyof Employee) => {
     const isAsc = orderBy === property && orderDirection === 'asc';
@@ -105,36 +133,6 @@ export default function EmployeeList() {
   };
 
   const sortedEmployees = sortEmployees([...employees]);
-
-  const handleRegister = () => {
-    console.log('従業員登録');
-  };
-
-  const handleImport = () => {
-    console.log('インポート');
-  };
-
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  const handleFileSelect = () => {
-    fileInputRef.current?.click(); // ファイル入力をプログラム的にクリック
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('ファイルが選択されました:', file.name);
-      // ここでファイルのアップロード処理や読み込み処理を行います
-    }
-  };
 
   return (
     <>
@@ -166,18 +164,27 @@ export default function EmployeeList() {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleRegister}
+          onClick={() => console.log('従業員登録')}
           sx={{ marginX: 1 }}
         >
           従業員登録
         </Button>
-        <Button variant="contained" color="info" onClick={handleFileSelect}>
+        <Button
+          variant="contained"
+          color="info"
+          onClick={() => fileInputRef.current?.click()}
+        >
           インポート
         </Button>
         <input
           type="file"
           ref={fileInputRef}
-          onChange={handleFileChange}
+          onChange={(event) =>
+            console.log(
+              'ファイルが選択されました:',
+              event.target.files?.[0].name,
+            )
+          }
           style={{ display: 'none' }}
           accept=".xls,.xlsx"
         />
@@ -206,20 +213,19 @@ export default function EmployeeList() {
           </TableHead>
           <TableBody>
             {sortedEmployees.map((employee) => (
-              <TableRow key={employee.id}>
-                <TableCell align="right">{employee.id}</TableCell>
-                <TableCell>{`${employee.lastName} ${employee.firstName}`}</TableCell>
-                <TableCell>{employee.birthDate}</TableCell>
-                <TableCell>{employee.gender}</TableCell>
-                <TableCell>{employee.address}</TableCell>
-                <TableCell>{employee.postalCode}</TableCell>
-                <TableCell>{employee.phone}</TableCell>
+              <TableRow key={employee.userId}>
+                <TableCell>{employee.userId}</TableCell>
+                <TableCell>{employee.fullName}</TableCell>
+                <TableCell>{employee.birthday}</TableCell>
+                <TableCell>{employee.email}</TableCell>
+                <TableCell>{employee.fullAddress}</TableCell>
+                <TableCell>{employee.tel}</TableCell>
                 <TableCell>
                   <IconButton
                     aria-label="more"
                     aria-controls="long-menu"
                     aria-haspopup="true"
-                    onClick={handleClick}
+                    onClick={(event) => setAnchorEl(event.currentTarget)}
                   >
                     <MoreVertIcon />
                   </IconButton>
@@ -228,16 +234,15 @@ export default function EmployeeList() {
                     anchorEl={anchorEl}
                     keepMounted
                     open={Boolean(anchorEl)}
-                    onClose={handleClose}
+                    onClose={() => setAnchorEl(null)}
                     sx={{
                       '& .MuiPaper-root': {
-                        // Menu の内部の Paper コンポーネントに適用されるスタイル
-                        boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)', // 影の強さを調整
+                        boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)',
                       },
                     }}
                   >
-                    <MenuItem onClick={handleClose}>編集</MenuItem>
-                    <MenuItem onClick={handleClose}>削除</MenuItem>
+                    <MenuItem onClick={() => setAnchorEl(null)}>編集</MenuItem>
+                    <MenuItem onClick={() => setAnchorEl(null)}>削除</MenuItem>
                   </Menu>
                 </TableCell>
               </TableRow>
