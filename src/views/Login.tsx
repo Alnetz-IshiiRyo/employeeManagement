@@ -17,8 +17,8 @@ export default function Login(props: LoginProps) {
 
   const history = useHistory();
 
-  // フォーム送信処理
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  // ログイン送信処理
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // デフォルトの送信を防止
 
     // エラー表示のリセット
@@ -62,7 +62,7 @@ export default function Login(props: LoginProps) {
       <Card className="login-card">
         <Card.Body>
           <h2 className="text-center">ログイン</h2>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleLogin}>
             <Form.Group className="mb-3">
               <Form.Label>ユーザーID</Form.Label>
               <Form.Control
