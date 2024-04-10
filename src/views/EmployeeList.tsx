@@ -25,7 +25,9 @@ import axios from 'axios';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import employeesTmp from './test'; // TODO:テストデータ後で消す
+
 import { APIEmployee, Employee } from '../types/commonTypes';
+import { convertKeysToCamelCase } from '../utils/commonUtils';
 
 // テーブルヘッダーの情報を定義する型
 interface HeadCell {
@@ -103,7 +105,8 @@ export default function EmployeeList() {
       setLoading(true);
       try {
         const response = await axios.get(GET_EMPLOYEES_API);
-        const formatdata = formatEmployeeData(response.data);
+        const camelCaseData = convertKeysToCamelCase(response.data);
+        const formatdata = formatEmployeeData(camelCaseData as APIEmployee[]);
         setEmployees(formatdata); // 従業員データをセット
       } catch (error) {
         setError('データの取得中にエラーが発生しました。');
