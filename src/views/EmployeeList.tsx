@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TableContainer,
@@ -9,25 +9,24 @@ import {
   TableBody,
   TableSortLabel,
   Paper,
-  AppBar,
   Toolbar,
-  Typography,
   Button,
   Snackbar,
   IconButton,
   Menu,
   MenuItem,
   Alert,
-  CircularProgress,
-  Box,
 } from '@mui/material';
 import axios from 'axios';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 import employeesTmp from './test'; // TODO:テストデータ後で消す
 
 import { APIEmployee, Employee } from '../types/commonTypes';
 import { convertKeysToCamelCase } from '../utils/commonUtils';
+import Footer from '../components/Footer';
+import Header from '../components/Header';
 
 // テーブルヘッダーの情報を定義する型
 interface HeadCell {
@@ -54,37 +53,6 @@ const POST_IMPORT_API = '/api/employees/import'; // TODO:後で編集
 // 従業員削除API
 const DELETE_EMPLOYEES_API = '/api/employees/'; // TODO:後で編集
 
-// 従業員インポート処理
-const handleImport = async (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    await axios.post(POST_IMPORT_API, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    alert('インポートが完了しました。');
-    // 成功したらデータを再取得するなどの処理
-  } catch (error) {
-    console.error('インポート処理に失敗しました。', error);
-  }
-};
-
-// 従業員削除処理
-const handleDelete = async (userId: string) => {
-  if (window.confirm(`${userId}を削除しますか？`)) {
-    try {
-      await axios.delete(`${DELETE_EMPLOYEES_API}${userId}`);
-      alert('削除が完了しました。');
-      // 成功したらデータを再取得するなどの処理
-    } catch (error) {
-      console.error('削除処理に失敗しました。', error);
-    }
-  }
-};
-
 // 従業員一覧コンポーネント
 export default function EmployeeList() {
   const navigate = useNavigate();
@@ -97,27 +65,61 @@ export default function EmployeeList() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const formatdata = formatEmployeeData(employeesTmp);
-    setEmployees(formatdata); // 従業員データをセット
+  // 従業員データ取得
+  const fetchEmployees = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(GET_EMPLOYEES_API);
+      const camelCaseData = convertKeysToCamelCase(response.data);
+      const formatdata = formatEmployeeData(camelCaseData as APIEmployee[]);
+      setEmployees(formatdata); // 従業員データをセット
+    } catch (error) {
+      setError('データの取得中にエラーが発生しました。');
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const fetchEmployees = async () => {
+  // 従業員インポート
+  const handleImport = async (file: File) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await axios.post(POST_IMPORT_API, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      alert('インポートが完了しました。');
+      // 成功したらデータを再取得
+      fetchEmployees();
+    } catch (error) {
+      console.error('インポート処理に失敗しました。', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 従業員削除処理
+  const handleDelete = async (userId: string) => {
+    if (window.confirm(`${userId}を削除しますか？`)) {
       setLoading(true);
+
       try {
-        const response = await axios.get(GET_EMPLOYEES_API);
-        const camelCaseData = convertKeysToCamelCase(response.data);
-        const formatdata = formatEmployeeData(camelCaseData as APIEmployee[]);
-        setEmployees(formatdata); // 従業員データをセット
+        await axios.delete(`${DELETE_EMPLOYEES_API}${userId}`);
+        alert('削除が完了しました。');
+        // 成功したらデータを再取得
+        fetchEmployees();
       } catch (error) {
-        setError('データの取得中にエラーが発生しました。');
-        setOpenSnackbar(true);
+        console.error('削除処理に失敗しました。', error);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchEmployees();
-  }, []);
+    }
+  };
 
   // 従業員データを表示用に整形する関数
   const formatEmployeeData = (employees: APIEmployee[]) => {
@@ -128,12 +130,14 @@ export default function EmployeeList() {
     }));
   };
 
+  // 従業員並び替え
   const handleRequestSort = (property: keyof Employee) => {
     const isAsc = orderBy === property && orderDirection === 'asc';
     setOrderDirection(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
+  // 従業員データ並び替え
   const sortEmployees = (array: Employee[]) => {
     return array.sort((a, b) => {
       if (a[orderBy] < b[orderBy]) {
@@ -146,6 +150,7 @@ export default function EmployeeList() {
     });
   };
 
+  // スナックバーを閉じる
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
@@ -160,37 +165,18 @@ export default function EmployeeList() {
 
   const sortedEmployees = sortEmployees([...employees]);
 
+  // コンポーネントのマウント時に従業員データを取得
+  useEffect(() => {
+    const formatdata = formatEmployeeData(employeesTmp); // TODO:テスト用
+    setEmployees(formatdata); // TODO:テスト用
+
+    fetchEmployees();
+  }, [fetchEmployees]);
+
   return (
     <>
-      {loading && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            zIndex: 1500,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
-
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            従業員一覧
-          </Typography>
-          <Button color="inherit" onClick={() => navigate('/login')}>
-            ログアウト
-          </Button>{' '}
-        </Toolbar>
-      </AppBar>
+      <LoadingOverlay loading={loading} />
+      <Header />
       <Snackbar
         open={openSnackbar}
         autoHideDuration={null}
@@ -209,7 +195,7 @@ export default function EmployeeList() {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/employees/register')} // 登録画面への遷移
+          onClick={() => navigate('/employees/register')}
           sx={{ marginX: 1 }}
         >
           従業員登録
@@ -296,6 +282,7 @@ export default function EmployeeList() {
           </TableBody>
         </Table>
       </TableContainer>
+      <Footer />
     </>
   );
 }

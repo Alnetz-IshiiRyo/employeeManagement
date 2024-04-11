@@ -29,7 +29,7 @@ export default function Login(props: LoginProps) {
 
     try {
       const response = await axios.post(LOGIN_API, {
-        userId,
+        admin_name: userId,
         password,
       });
 

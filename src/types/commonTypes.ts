@@ -23,6 +23,22 @@ export interface Employee {
   tel: string;
 }
 
+// API従業員登録情報の型定義
+export interface POSTEmployee {
+  userName: string;
+  password: string;
+  userId: string;
+  lastName: string;
+  firstName: string;
+  birthday: string;
+  email: string;
+  zipcode: string;
+  prefcode: string;
+  city: string;
+  address: string;
+  tel: string;
+}
+
 // 都道府県の型定義
 export interface Prefecture {
   code: string;
