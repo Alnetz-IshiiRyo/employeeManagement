@@ -18,36 +18,16 @@ import {
   Menu,
   MenuItem,
   Alert,
+  CircularProgress,
+  Box,
 } from '@mui/material';
 import axios from 'axios';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import employeesTmp from './test'; // TODO:テストデータ後で消す
 
-// API従業員情報の型定義
-interface APIEmployee {
-  userId: string;
-  lastName: string;
-  firstName: string;
-  birthday: string;
-  email: string;
-  zipcode: string;
-  prefcode: string;
-  city: string;
-  address: string;
-  tel: string;
-}
-
-// 従業員情報の型定義
-interface Employee {
-  userId: string;
-  fullName: string;
-  birthday: string;
-  email: string;
-  zipcode: string;
-  fullAddress: string;
-  tel: string;
-}
+import { APIEmployee, Employee } from '../types/commonTypes';
+import { convertKeysToCamelCase } from '../utils/commonUtils';
 
 // テーブルヘッダーの情報を定義する型
 interface HeadCell {
@@ -125,7 +105,8 @@ export default function EmployeeList() {
       setLoading(true);
       try {
         const response = await axios.get(GET_EMPLOYEES_API);
-        const formatdata = formatEmployeeData(response.data);
+        const camelCaseData = convertKeysToCamelCase(response.data);
+        const formatdata = formatEmployeeData(camelCaseData as APIEmployee[]);
         setEmployees(formatdata); // 従業員データをセット
       } catch (error) {
         setError('データの取得中にエラーが発生しました。');
@@ -181,14 +162,33 @@ export default function EmployeeList() {
 
   return (
     <>
+      {loading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 1500,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             従業員一覧
           </Typography>
-          <Button color="inherit" onClick={() => console.log('ログアウト')}>
+          <Button color="inherit" onClick={() => navigate('/login')}>
             ログアウト
-          </Button>
+          </Button>{' '}
         </Toolbar>
       </AppBar>
       <Snackbar
@@ -209,7 +209,7 @@ export default function EmployeeList() {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/register')} // 登録画面への遷移
+          onClick={() => navigate('/employees/register')} // 登録画面への遷移
           sx={{ marginX: 1 }}
         >
           従業員登録

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './views/Login';
 import Register from './views/Register';
 import EmployeeList from './views/EmployeeList';
+import EmployeeRegister from './views/EmployeeRegister';
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/employees" element={<EmployeeList />} />
+          <Route path="/employees/register" element={<EmployeeRegister />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </div>
