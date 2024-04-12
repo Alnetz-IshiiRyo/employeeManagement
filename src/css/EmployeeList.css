@@ -1,0 +1,7 @@
+.dropdown-toggle-no-caret {
+  cursor: pointer;
+}
+
+.dropdown-toggle-no-caret:hover {
+  color: #0056b3; /* ホバー時の色はダークブルーにします */
+}
