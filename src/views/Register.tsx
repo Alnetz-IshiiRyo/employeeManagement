@@ -85,20 +85,20 @@ export default function Register() {
                 className="mb-3"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="パスワード"
               />
               <Form.Control
                 type={showPassword ? 'text' : 'password'}
                 value={passwordAgain}
-                onChange={(e) => setPasswordAgain(e.target.value)}
+                onChange={(event) => setPasswordAgain(event.target.value)}
                 placeholder="パスワード再入力"
               />
               <Form.Check
                 type="checkbox"
                 label="パスワードを表示"
                 checked={showPassword}
-                onChange={(e) => setShowPassword(e.target.checked)}
+                onChange={(event) => setShowPassword(event.target.checked)}
                 className="mt-2"
               />
             </Form.Group>
@@ -106,7 +106,7 @@ export default function Register() {
             <Button className="w-100" type="submit">
               登録
             </Button>
-            <div className="mt-3">
+            <div className="text-center mt-3">
               <Link to="/login">戻る</Link>
             </div>
           </Form>
