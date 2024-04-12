@@ -3,11 +3,10 @@ import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/Login.css'; // CSSファイルのインポート
+import { LOGIN_API } from '../config/apiConfig';
 
 // コンポーネントのPropsの型定義（ここではPropsは使用していないため空）
 interface LoginProps {}
-
-const LOGIN_API = '/api/admin/login'; // TODO:後で修正
 
 export default function Login(props: LoginProps) {
   // 状態の型定義

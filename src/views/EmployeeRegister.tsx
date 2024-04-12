@@ -21,12 +21,13 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Snackbar } from '@mui/material';
-import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
-import { APIEmployee, prefectures } from '../types/commonTypes';
+import { POSTEmployee, prefectures } from '../types/commonTypes';
 import dayjs, { Dayjs } from 'dayjs';
-import 'dayjs/locale/ja'; // 日本語のロケールをインポート
+import 'dayjs/locale/ja';
 import axios from 'axios';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const POST_EMPLOYEES_API = '/api/employees'; // TODO:後で修正
 
@@ -39,7 +40,9 @@ export default function EmployeeRegister() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [employee, setEmployee] = useState<APIEmployee>({
+  const [employee, setEmployee] = useState<POSTEmployee>({
+    userName: '',
+    password: '',
     userId: '',
     lastName: '',
     firstName: '',
@@ -79,6 +82,8 @@ export default function EmployeeRegister() {
         if (response.status === 200) {
           // フォームフィールドをクリア
           setEmployee({
+            userName: '',
+            password: '',
             userId: '',
             lastName: '',
             firstName: '',
@@ -134,7 +139,7 @@ export default function EmployeeRegister() {
     }
 
     // 必須項目の配列を定義
-    const requiredFields: (keyof APIEmployee)[] = [
+    const requiredFields: (keyof POSTEmployee)[] = [
       'userId',
       'email',
       'lastName',
@@ -162,16 +167,7 @@ export default function EmployeeRegister() {
 
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            従業員登録
-          </Typography>
-          <Button color="inherit" onClick={() => navigate(-1)}>
-            戻る
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <Header />
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={null}
@@ -209,7 +205,7 @@ export default function EmployeeRegister() {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
                 id="lastName"
@@ -223,7 +219,7 @@ export default function EmployeeRegister() {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
                 id="firstName"
@@ -376,6 +372,7 @@ export default function EmployeeRegister() {
           </Grid>
         </Box>
       </Box>
+      <Footer />
     </>
   );
 }

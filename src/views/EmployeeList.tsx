@@ -27,6 +27,11 @@ import { APIEmployee, Employee } from '../types/commonTypes';
 import { convertKeysToCamelCase } from '../utils/commonUtils';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import {
+  DELETE_EMPLOYEES_API,
+  GET_EMPLOYEES_API,
+  POST_IMPORT_API,
+} from '../config/apiConfig';
 
 // テーブルヘッダーの情報を定義する型
 interface HeadCell {
@@ -45,13 +50,6 @@ const headCells: HeadCell[] = [
   { id: 'fullAddress', numeric: false, disablePadding: false, label: '住所' },
   { id: 'tel', numeric: false, disablePadding: false, label: '電話番号' },
 ];
-
-// 従業員データ取得API
-const GET_EMPLOYEES_API = '/api/admin/employees'; // TODO:後で編集
-// 従業員インポートAPI
-const POST_IMPORT_API = '/api/employees/import'; // TODO:後で編集
-// 従業員削除API
-const DELETE_EMPLOYEES_API = '/api/employees/'; // TODO:後で編集
 
 // 従業員一覧コンポーネント
 export default function EmployeeList() {
@@ -268,7 +266,9 @@ export default function EmployeeList() {
                     }}
                   >
                     <MenuItem
-                      onClick={() => navigate(`/edit/${employee.userId}`)}
+                      onClick={() =>
+                        navigate(`/employees/edit/${employee.userId}`)
+                      }
                     >
                       編集
                     </MenuItem>
