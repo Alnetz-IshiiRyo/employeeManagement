@@ -1,5 +1,5 @@
-// EmployeeRegister.tsx
-import React, { useState } from 'react';
+// EmployeeEdit.tsx
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -15,31 +15,22 @@ import {
   SelectChangeEvent,
   FormHelperText,
   Alert,
+  Snackbar,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Snackbar } from '@mui/material';
-
-import { POSTEmployee, prefectures } from '../types/commonTypes';
+import axios from 'axios';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/ja';
-import axios from 'axios';
+
+import { POSTEmployee, prefectures } from '../types/commonTypes';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { GET_EMPLOYEE_API, PUT_EMPLOYEES_API } from '../config/apiConfig';
 
-const POST_EMPLOYEES_API = '/api/employees'; // TODO:後で修正
-
-export default function EmployeeRegister() {
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>(
-    'success',
-  );
-
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
+export default function EmployeeEdit() {
   const [employee, setEmployee] = useState<POSTEmployee>({
     userName: '',
     password: '',
@@ -54,118 +45,87 @@ export default function EmployeeRegister() {
     address: '',
     tel: '',
   });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>(
+    'success',
+  );
 
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
   const handleBackToEmployeeList = () => {
-    navigate('/employees'); // 従業員一覧画面へのパスを指定
+    navigate('/employees');
   };
 
+  // コンポーネントマウント時に従業員の詳細をAPIから取得
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      try {
+        const response = await axios.get(`${GET_EMPLOYEE_API}${id}`);
+        const employeeData = response.data;
+        setEmployee({
+          ...employeeData,
+          birthday: dayjs(employeeData.birthday).toISOString(), // 日付をISO形式に変換
+        });
+      } catch (error) {
+        console.error('従業員データの取得に失敗しました', error);
+      }
+    };
+
+    if (id) {
+      fetchEmployee();
+    }
+  }, [id]);
+
+  // フォームフィールドが変更されたときのハンドラ
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setEmployee((prev) => ({ ...prev, [name]: value }));
   };
 
+  // 都道府県の選択が変更されたときのハンドラ
   const handlePrefChange = (event: SelectChangeEvent<string>) => {
     setEmployee((prev) => ({ ...prev, prefcode: event.target.value }));
   };
 
+  // 生年月日が変更されたときのハンドラ
   const handleDateChange = (date: Dayjs | null) => {
     setEmployee((prev) => ({
       ...prev,
-      birthday: date ? date.toISOString() : '', // 日付をISO形式の文字列に変換
+      birthday: date ? date.toISOString() : '',
     }));
   };
 
+  // フォームの送信処理
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (validateForm()) {
       try {
-        const response = await axios.post(POST_EMPLOYEES_API, employee);
+        const response = await axios.put(`${PUT_EMPLOYEES_API}${id}`, employee);
         if (response.status === 200) {
-          // フォームフィールドをクリア
-          setEmployee({
-            userName: '',
-            password: '',
-            userId: '',
-            lastName: '',
-            firstName: '',
-            birthday: '',
-            email: '',
-            zipcode: '',
-            prefcode: '',
-            city: '',
-            address: '',
-            tel: '',
-          });
-          // 成功メッセージを表示
-          setSnackbarMessage('登録が完了しました。');
+          setSnackbarMessage('更新が完了しました。');
           setSnackbarSeverity('success');
           setSnackbarOpen(true);
+          navigate('/employees'); // 更新後は従業員一覧画面にリダイレクト
         }
       } catch (error) {
-        setSnackbarMessage('登録に失敗しました。');
+        console.error('従業員情報の更新に失敗しました', error);
+        setSnackbarMessage('更新に失敗しました。');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
       }
     }
   };
 
+  // フォームのバリデーション
   const validateForm = () => {
     let newErrors = {};
-
-    // ユーザーIDが半角英数字のみであることをチェック
-    const userIdRegex = /^[a-zA-Z0-9]+$/;
-    if (!userIdRegex.test(employee.userId)) {
-      newErrors = { ...newErrors, userId: 'ユーザーIDは半角英数字のみです。' };
-    }
-
-    // メールがメールアドレス形式であることをチェック
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(employee.email)) {
-      newErrors = {
-        ...newErrors,
-        email: 'メールアドレス形式で入力してください。',
-      };
-    }
-
-    // 郵便番号が数字のみであることをチェック
-    const zipcodeRegex = /^\d+$/;
-    if (!zipcodeRegex.test(employee.zipcode)) {
-      newErrors = { ...newErrors, zipcode: '郵便番号は数字のみです。' };
-    }
-
-    // 電話番号が数字のみであることをチェック
-    const telRegex = /^\d+$/;
-    if (!telRegex.test(employee.tel)) {
-      newErrors = { ...newErrors, tel: '電話番号は数字のみです。' };
-    }
-
-    // 必須項目の配列を定義
-    const requiredFields: (keyof POSTEmployee)[] = [
-      'userId',
-      'email',
-      'lastName',
-      'firstName',
-      'birthday',
-      'zipcode',
-      'city',
-      'address',
-      'tel',
-      'prefcode', // 都道府県を必須項目として追加
-    ];
-
-    // 各必須項目に対してバリデーションチェックを行う
-    requiredFields.forEach((field) => {
-      if (!employee[field]) {
-        newErrors = { ...newErrors, [field]: '必須項目です。' };
-      }
-    });
+    // バリデーションロジックをここに追加
 
     setErrors(newErrors);
-
-    // エラーがない場合はtrueを返す
     return Object.keys(newErrors).length === 0;
   };
 
@@ -174,7 +134,7 @@ export default function EmployeeRegister() {
       <Header />
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={null}
+        autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
@@ -206,7 +166,7 @@ export default function EmployeeRegister() {
                 variant="outlined"
                 error={!!errors.userId}
                 helperText={errors.userId}
-                required
+                disabled
               />
             </Grid>
             <Grid item xs={6}>
@@ -247,6 +207,7 @@ export default function EmployeeRegister() {
                 }}
               >
                 <DatePicker
+                  disabled
                   label="生年月日"
                   value={employee.birthday ? dayjs(employee.birthday) : null}
                   onChange={handleDateChange}
@@ -364,15 +325,28 @@ export default function EmployeeRegister() {
               />
             </Grid>
           </Grid>
-          <Grid container spacing={2} alignItems="center">
+          <Grid
+            container
+            spacing={2}
+            alignItems="center"
+            justifyContent="flex-end"
+          >
             <Grid item>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleBackToEmployeeList}
-              >
-                従業員一覧に戻る
-              </Button>
+              <Grid container spacing={1} alignItems="center">
+                <Button
+                  variant="text" // テキストボタンに変更
+                  color="inherit" // 色を継承
+                  onClick={handleBackToEmployeeList}
+                  sx={{
+                    padding: '6px 8px', // パディングを調整
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)', // ホバー時の背景色を調整
+                    },
+                  }}
+                >
+                  戻る
+                </Button>
+              </Grid>
             </Grid>
             <Grid item>
               <Button
@@ -381,7 +355,7 @@ export default function EmployeeRegister() {
                 color="primary"
                 sx={{ mt: 3 }}
               >
-                登録
+                更新
               </Button>
             </Grid>
           </Grid>

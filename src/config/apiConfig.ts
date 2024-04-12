@@ -7,6 +7,8 @@ export const LOGIN_API = `${API_URL}/api/admin/login`;
 export const ADMIN_REGISTER_API = `${API_URL}/api/admin/register`;
 // 従業員一覧取得API
 export const GET_EMPLOYEES_API = `${API_URL}/api/employees`;
+// 従業員取得API
+export const GET_EMPLOYEE_API = `${API_URL}/api/employees`;
 // 従業員登録API
 export const POST_EMPLOYEES_API = `${API_URL}/api/employees`;
 // 従業員更新API
